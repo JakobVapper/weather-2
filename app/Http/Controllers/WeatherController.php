@@ -23,11 +23,21 @@ class WeatherController extends Controller
 
     public function getWeather($city)
     {
-        return Cache::remember(
+        // Use the cached weather data method
+        $weatherData = Cache::remember(
             'weather_' . strtolower($city), 
             self::CACHE_DURATION, 
             fn() => $this->fetchWeatherData($city)
         );
+
+        if (isset($weatherData['error'])) {
+            return response()->json($weatherData, $weatherData['status'] ?? 404);
+        }
+
+        return view('weather', [
+            'city' => $city,
+            'weather' => $weatherData
+        ]);
     }
 
     private function fetchWeatherData($city)
